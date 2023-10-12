@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% from 'macros.html' import makeTable %}
+
+{% block content %}
+<h1> checklist template</h1>
+<div class="container">
+    <h3>{{ project_id }} Suppy List</h3>
+</div>
+{{ makeTable(object, fields, data, link = False) }}
+
+<div class="container">
+<a class="btn btn-outline-primary mb-3" role="button" aria-disabled="true"
+    id="submitUsage">Submit Usages</a>
+<div class="row mt-3">
+    <div id="alert" style="display:none">
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+    $(function () {
+        $('#submitUsage').click(function () {
+            var return_data = {}
+            var supply_ids = []
+            var initial_usages = []
+            var new_usages =[]
+            {% for d in data %}
+            supply_ids.push({{ d[0] }})
+            initial_usages.push('{{ d[8] }}'=='True' )
+            {% endfor %}
+            return_data['project_id'] = {{ project_id }}
+            return_data['supply_ids'] = supply_ids
+            return_data['initial_usages'] = initial_usages
+            
+            getTableValues(new_usages)
+            return_data['new_usages'] = new_usages
+            $.ajax({
+                url: "/api/usage",
+                type: "POST",
+                data: JSON.stringify(return_data),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                success: function (response_data) {
+                    // showAlert($("#name").val())
+                    showAlert(response_data.message)
+                    console.log(response_data)
+                }
+            })
+            console.log('disable button')
+            $("#submitUsage").prop("disabled", true);
+        });
+        function showAlert(message) {
+            console.log('called show alert')
+            $('#alert').html("<div class='alert alert-success'>" + message + " <a href = '{{ url_for('edit',object='project',objectid=project_id)}}'>Click to Go Back</a></div>");
+            $('#alert').show();
+        };
+        function getTableValues(new_values){
+            $("tbody tr").each(function(index){
+                new_values.push($(this).find("td").eq(7).find("input").prop('checked'))
+                // console.log( index + ": " + $(this).find("th").html() + " " + $(this).find("td").eq(7).find("input").prop('checked') );
+            });
+        };
+    });
+</script>
+{% endblock %}

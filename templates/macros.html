@@ -1,0 +1,24 @@
+{% macro makeTable(object, fields, data, link = True) %}
+<div class="container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                {% for field in fields[1:] %}
+                <th scope="col">{{ field | prettyname }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in data %}
+            <tr {% if link %} onclick="window.location='{{ url_for('edit',object=object,objectid=d[0])}}'" {% endif %}>
+                <th scope="row" id="row_{{ d[0] }}">{{ d[0] }}</th>
+                {% for col in d[1:] %}
+                    <td>{{ col | prettyvalue | safe }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endmacro %}

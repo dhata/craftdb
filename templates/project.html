@@ -1,0 +1,94 @@
+{% extends "edit.html" %}
+
+{% from 'macros.html' import makeTable %}
+{% block child %}
+<h3> child block</h3>
+<div class="container">
+    <form action = "{{ url_for('view_usage',project_id=data[0][1] ) }}" method="POST" >
+        <input type="hidden" name="project_id" id="project_id" value="{{ data[0][1] }}">
+        <button type="submit" id="newusage" class="btn btn-outline-primary">
+            Update Supplies List
+        </button>
+    </form>
+   
+</div>
+
+<form id="childform">
+<div class="container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col" >#</th>
+                {% for field in childfields[1:] %}
+                <th scope="col">{{ field | prettyname }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in childdata %}
+            <tr {% if link %} onclick="window.location='{{ url_for('edit',object=object,objectid=d[0])}}'" {% endif %}>
+                <th scope="row" id="row_{{ d[0] }}">{{ d[0] }}</th>
+                {% for i in range(1,d|length) %}
+                {%if i==6 %}<td class="col-1"><input class="form-control form-control-sm" type=number name='units' value="{{ d[i] | prettyvalue | safe }}"></td>
+                {% elif i == 8 %}<td><textarea class="form-control" rows="1" name='notes'>{{ d[i] | prettyvalue}}</textarea>
+                {% else %}<td>{{ d[i] | prettyvalue | safe }}</td>
+                {% endif %}
+                {% endfor %}
+                <input class="form-control form-control-sm" type=hidden value="{{ d[0] }}" name="usage_id">
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="container">
+    <button type="submit" id="updateusage" class="btn btn-outline-primary">
+        Update Units
+    </button>
+</div>
+</form>
+{% endblock %}
+
+{% block javascript %}
+{{ super() }}
+<script>
+    $(function () {
+        $('#updateusage').click(function (e) {
+            e.preventDefault();
+            var data = {}
+            getTableValues(data)
+            console.log(data)
+            $.ajax({
+                url: '/api/usage/update',
+                type: "POST",
+                data: JSON.stringify(data),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                success: function (response_data) {
+                    // showAlert($("#name").val())
+                    refreshAlert(response_data.message, response_data.redirect)
+                    console.log(response_data)
+                }
+            })
+        });
+        
+        function refreshAlert(message,redirect) {
+            console.log('called show alert')
+            $('#alert').html("<div class='alert alert-success'>" + message + " <a href = '"+$(location).attr('href')+"'>Click to Refresh</a></div>");
+            $('#alert').show();
+        };
+        function getTableValues(data){
+            $("tbody tr").each(function(index){
+                object={}
+                object['usage_id'] = $(this).find("input[name='usage_id']").val()
+                object['units'] = $(this).find("input[name='units']").val()
+                object['notes'] = $(this).find("textarea[name='notes']").val()
+                data[index]=object
+                // data.push('{"usage_id": "' + $(this).find("input[name='usage_id']").val() + '", "units": "' + $(this).find("input[name='units']").val()+'"}')
+                console.log( "usage_id: " + $(this).find("input[name='usage_id']").val() + " units:" + $(this).find("input[name='units']").val() +" notes:"+ $(this).find("textarea[name='notes']").val() );
+            });
+        };
+    });
+</script>
+{% endblock %}

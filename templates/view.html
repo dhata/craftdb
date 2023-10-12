@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1> view template</h1>
+<div class="container">
+    <h3>{{ title }}</h3>
+    <a class="btn btn-outline-primary mb-3" role="button" aria-disabled="true"
+    href="{{ url_for('create',object=object) }}">New {{ object | prettyname }}</a>
+</div>
+{% block tableview %}
+<div class="container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                {% for field in fields[1:] %}
+                <th scope="col">{{ field | prettyname }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in data %}
+            <tr  onclick="window.location='{{ url_for('edit',object=object,objectid=d[0])}}'">
+                <th scope="row">{{ d[0] }}</th>
+                {% for col in d[1:] %}
+                    <td>{{ col | prettyvalue | safe }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+{% endblock %}
+
+{% block javascript %} 
+<script>
+    $(function () {
+        $('input:checkbox').attr('disabled','true')
+        });
+</script>
+{% endblock %}

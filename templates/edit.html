@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - {% endblock %}
+
+{% block content %}
+{{ dropdown }}
+{{ new }}
+{{ data }}
+  <h1>Project Page</h1>
+    <div class="container">
+        {% if new %}
+        <h3> New {{ object|prettyname }}</h3>
+        {% else %}
+        <h3>{{ object|prettyname }} ID: {{ data[0][1] | prettyvalue }}</h3>
+        {% endif %}
+    </div>
+    <form id="form">
+      <div class="container">
+          {% for field, value, type in data[1:] %}
+          <div class="row mt-3"">
+              <div class="col-sm-2 col-form-label">
+                  <label for="{{ field }}"" class=" form-label">{{ field | prettyname }}</label>
+              </div>
+              <div class="col-sm-6">
+                  {% if type == 25 %} {# text #}
+  
+                  <input class="form-control p-3" type="text" 
+                    id="{{ field }}" name="{{ field }}" {% if keyword == "Edit" %}value = "{{ value }}"{% endif %}
+                    {% if field == 'brand' or field == 'store' or field == 'type' %} 
+                      list = "{{ field }}Options"> 
+                      <datalist id="{{field}}Options">
+                        {% for option in dropdown[field] %}
+                        <option value={{ option }}>
+                        {% endfor %}
+                    </datalist 
+                    {% endif %}
+                      >
+  
+                  {% elif type == 1114 %} {# date #}
+                  <div class="input-group date" data-date-format="mm/dd/yyyy">
+                      <input class="form-control p-3 datepicker" type="text" placeholder="MM/DD/YYYY"
+                          id="{{ field }}" name="{{ field }}" {% if keyword == "Edit" %}value = "{{ value| prettyvalue }}"{% endif %}>
+                  </div>
+                  {% elif type == 3 %} {# dropdown #}
+                  <input class="form-control" list="{{ field }}Options" id="{{ field }}" {% if keyword=="Edit" %}value = "{{ value }}"{% endif %}
+                      name="{{ field }}">
+                  <datalist id="{{field}}Options">
+                      {% for value in list %}
+                      <option value={{ value }}>
+                      {% endfor %}
+                  </datalist>
+                  {% elif type == 23 %} {# integer #}
+                  <input class="form-control p-3" type="number" 
+                  {% if keyword=="Edit" or field == 'multipack_id' %}value = "{{ value }}"{% endif %}
+                  {% if field == "multipack_id" %} disabled {% endif %}
+                      id="{{ field }}" name="{{ field }}">
+                  {% elif type == 701 %} {# float #}
+                  <input class="form-control p-3" type="number" {% if keyword in 'Edit,FromMultipack' %}value = "{{ value }}"{% endif %}
+                      id="{{ field }}" name="{{ field }}">
+                  {% elif type == 16 %} {# boolean #}
+                  <div class="form-check form-switch vertical-align">
+                      <input class="form-check-input p-3 {% if not new %}active{% endif %}" type="checkbox" id="{{ field }}" name = "{{ field }}" {{'checked' if value else ''}}>
+                  </div>
+                  {% endif %}
+              </div>
+          </div>
+          {% endfor %}
+          <input type="hidden" id="{{ data[0][0] }}" value="{{ data[0][1] }}">
+          <div class="row mt-3">
+              <div class="col-sm-2">
+                  <button type="button" class="btn btn-primary" id="submit">Submit</button>
+              </div>
+              <div class="col-sm-2">
+                  <button type="reset" class="btn btn-secondary">Reset</button>
+              </div>
+          </div>
+          <div class="row mt-3">
+              <div id="alert" style="display:none">
+              </div>
+          </div>
+      </div>
+  </form>
+  {% block child %}
+  {% endblock %}
+{% endblock %}
+
+{% block javascript %}
+<script>
+    $(function () {
+        $('#submit').click(function () {
+            var data = {}
+            {% for field, value, type in data %}
+            {% if type == 16 %}
+                data["{{ field }}"] = $("#{{ field }}").prop('checked')
+            {% else %}
+                data["{{ field }}"] = $("#{{ field }}").val()
+            {% endif %}
+            {% endfor %}
+            console.log(data)
+            $.ajax({
+                url: {% if keyword =='Edit' %} "/api/{{ object }}/update" {% else %} "/api/{{ object }}" {% endif %},
+                type: "POST",
+                data: JSON.stringify(data),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                success: function (response_data) {
+                    // showAlert($("#name").val())
+                    showAlert(response_data.message, response_data.redirect)
+                    console.log(response_data)
+                }
+            })
+            console.log('disable button')
+            $("#form :input").prop("disabled", true);
+        });
+        function showAlert(message, redirect) {
+            console.log('called show alert')
+            console.log(redirect)
+            $('#alert').html("<div class='alert alert-success'>" + message + " <a href = '" + redirect + "')'>Click to Go to {{ object | prettyvalue}}</a></div>");
+            $('#alert').show();
+        };
+    });
+</script>
+{% endblock %}
