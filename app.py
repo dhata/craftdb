@@ -50,7 +50,7 @@ UPDATE_USAGES_RETURN_ID = """UPDATE usages u SET units = v.units, notes = v.note
 
 FETCH_PROJECTS = """SELECT projects.*, coalesce(s.total_cost,0) as total_cost FROM projects left join ("""+SUBQ_TOTAL_COST_BY_PROJECT_ID+""") s on s.project_id = projects.project_id ORDER BY projects.project_id;"""
 FETCH_MULTIPACKS = """SELECT * FROM multipacks;"""
-FETCH_SUPPLIES = """SELECT * FROM supplies;"""
+FETCH_SUPPLIES = """SELECT supplies.*, usages.usage_count FROM supplies left join (SELECT supply_id, SUM(units) AS usage_count FROM usages GROUP BY supply_id) usages ON supplies.supply_id = usages.supply_id ORDER BY supplies.supply_id;"""
 FETCH_PROJECT_TYPES = """SELECT DISTINCT type FROM projects;"""
 FETCH_BRANDS = """SELECT DISTINCT brand FROM (
     SELECT brand FROM multipacks 
@@ -68,7 +68,7 @@ CHECK_PROJECT = """SELECT * FROM projects LIMIT 0"""
 CHECK_MULTIPACK = """SELECT * FROM multipacks LIMIT 0"""
 CHECK_SUPPLY = """SELECT supply_id, name, purchase_date, brand, store, volume, cost, estimate FROM supplies LIMIT 0"""
 
-GET_PROJECT = """SELECT * FROM projects WHERE project_id = {0} LIMIT 1 """
+GET_PROJECT = """SELECT projects.*, coalesce(s.total_cost,0)::numeric::money as total_cost FROM projects left join ("""+SUBQ_TOTAL_COST_BY_PROJECT_ID+""") s on s.project_id = projects.project_id WHERE projects.project_id = {0} LIMIT 1 """
 GET_MULTIPACK = """SELECT * FROM multipacks WHERE multipack_id = {0} LIMIT 1 """
 GET_SUPPLY = """SELECT * FROM supplies WHERE supply_id = {0} LIMIT 1 """
 GET_SUPPLY_FROM_MULTIPACK = """SELECT * FROM supplies WHERE multipack_id = {0}"""

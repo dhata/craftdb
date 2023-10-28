@@ -61,6 +61,9 @@
                   <div class="form-check form-switch vertical-align">
                       <input class="form-check-input p-3 {% if not new %}active{% endif %}" type="checkbox" id="{{ field }}" name = "{{ field }}" {{'checked' if value else ''}}>
                   </div>
+                  {% elif type == 790 %} {# money #}
+                  <input class="form-control p-3 form-control-plaintext bg-white" disabled readonly value = "{{ value }}"
+                      id="{{ field }}" name="{{ field }}">
                   {% endif %}
               </div>
           </div>
