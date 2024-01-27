@@ -50,7 +50,7 @@ UPDATE_USAGES_RETURN_ID = """UPDATE usages u SET units = v.units, notes = v.note
 
 FETCH_PROJECTS = """SELECT projects.*, coalesce(s.total_cost,0) as total_cost FROM projects left join ("""+SUBQ_TOTAL_COST_BY_PROJECT_ID+""") s on s.project_id = projects.project_id ORDER BY projects.project_id;"""
 FETCH_MULTIPACKS = """SELECT * FROM multipacks;"""
-FETCH_SUPPLIES = """SELECT supplies.*, usages.usage_count FROM supplies left join (SELECT supply_id, SUM(units) AS usage_count FROM usages GROUP BY supply_id) usages ON supplies.supply_id = usages.supply_id ORDER BY supplies.supply_id;"""
+FETCH_SUPPLIES = """SELECT supplies.*, supplies.cost/supplies.volume as costper, usages.usage_count FROM supplies left join (SELECT supply_id, SUM(units) AS usage_count FROM usages GROUP BY supply_id) usages ON supplies.supply_id = usages.supply_id ORDER BY supplies.supply_id;"""
 FETCH_PROJECT_TYPES = """SELECT DISTINCT type FROM projects;"""
 FETCH_BRANDS = """SELECT DISTINCT brand FROM (
     SELECT brand FROM multipacks 
@@ -154,6 +154,12 @@ def create(object):
             print(request.form)
             print(data)
             data.append(('multipack_id',request.form['multipack_id'],23))
+            data.pop(2)
+            data.insert(2,('purchase_date', request.form['purchase_date'],1114))
+            data.pop(3)
+            data.insert(3,('brand', request.form['brand'],25))
+            data.pop(4)
+            data.insert(4,('store', request.form['store'],25))
             data.pop(6)
             data.insert(6,('cost', request.form['costper'],701))
             keyword = "FromMultipack"

@@ -6,6 +6,9 @@
 <div class="container">
     <form action = "{{ url_for('create',object='supply') }}" method="POST" >
     <input type="hidden" name="multipack_id" id="multipack_id" value="{{ data[0][1] }}">
+    <input type="hidden" name="purchase_date" id="purchase_date" value = "{{ data[2][1] | prettyvalue }}">
+    <input type="hidden" name="brand" id="brand" value = "{{ data[3][1] | prettyvalue }}">
+    <input type="hidden" name="store" id="store" value = "{{ data[4][1] | prettyvalue }}">
     <input type="hidden" name="costper" id="costper" value = "{{ data[6][1]/data[5][1] | prettyvalue }}">
     <button type="submit" id="newsupply" value="{{ data[0][1] }}" class="btn btn-outline-primary">
         New Supply from Multipack
