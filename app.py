@@ -43,12 +43,12 @@ DELETE_USAGES_RETURN_ID = (
     "DELETE FROM usages WHERE (project_id, supply_id ) in (%s) RETURNING usage_id;"
 )
 
-UPDATE_PROJECTS_RETURN_ID = """UPDATE projects SET name='{name}', date='{date}', type='{type}' WHERE project_id = {project_id} RETURNING project_id"""
+UPDATE_PROJECTS_RETURN_ID = """UPDATE projects SET name='{name}', date='{date}', type='{type}', notes='{notes}' WHERE project_id = {project_id} RETURNING project_id"""
 UPDATE_MULTIPACKS_RETURN_ID = """UPDATE multipacks SET name='{name}', purchase_date='{purchase_date}', brand='{brand}', store='{store}', volume='{volume}', cost='{cost}' WHERE multipack_id = {multipack_id} RETURNING multipack_id"""
 UPDATE_SUPPLIES_RETURN_ID = """UPDATE supplies SET name='{name}', purchase_date='{purchase_date}', brand='{brand}', store='{store}', volume='{volume}', cost='{cost}', estimate='{estimate}', used='{used}' WHERE supply_id = {supply_id} RETURNING supply_id"""
 UPDATE_USAGES_RETURN_ID = """UPDATE usages u SET units = v.units, notes = v.notes FROM (values {0} ) AS v (usage_id, units, notes) WHERE v.usage_id = u.usage_id RETURNING u.usage_id;"""
 
-FETCH_PROJECTS = """SELECT projects.*, coalesce(s.total_cost,0) as total_cost FROM projects left join ("""+SUBQ_TOTAL_COST_BY_PROJECT_ID+""") s on s.project_id = projects.project_id ORDER BY projects.project_id;"""
+FETCH_PROJECTS = """SELECT projects.project_id, projects.name, projects.date, projects.type, coalesce(s.total_cost,0) as total_cost FROM projects left join ("""+SUBQ_TOTAL_COST_BY_PROJECT_ID+""") s on s.project_id = projects.project_id ORDER BY projects.project_id;"""
 FETCH_MULTIPACKS = """SELECT * FROM multipacks;"""
 FETCH_SUPPLIES = """SELECT supplies.*, supplies.cost/supplies.volume as costper, usages.usage_count FROM supplies left join (SELECT supply_id, SUM(units) AS usage_count FROM usages GROUP BY supply_id) usages ON supplies.supply_id = usages.supply_id ORDER BY supplies.supply_id;"""
 FETCH_PROJECT_TYPES = """SELECT DISTINCT type FROM projects;"""
@@ -194,6 +194,7 @@ def edit(object, objectid):
                 cursor.execute(query.format(objectid))
                 childdata = cursor.fetchall()
                 childfields = [i[0] for i in cursor.description]
+                print([i for i in cursor.description])
         return render_template("project.html", object= object, data=data, dropdown=dropdown, keyword="Edit", childdata=childdata, childfields=childfields)
     elif object == "multipack":
         query = GET_MULTIPACK
@@ -342,6 +343,7 @@ def update_project():
     data = request.get_json()
     with connection:
         with connection.cursor() as cursor:
+            print(data)
             cursor.execute(UPDATE_PROJECTS_RETURN_ID.format(**data))
             id = cursor.fetchone()[0]
     return {"id": id, "message": f"Project {data['name']} updated.", "redirect":"/edit/project/"+str(id)}, 201

@@ -22,10 +22,12 @@
                   <label for="{{ field }}"" class=" form-label">{{ field | prettyname }}</label>
               </div>
               <div class="col-sm-6">
-                  {% if type == 25 %} {# text #}
+                  {% if field == 'notes' %} {# notes field supercedes text #}
+                  <textarea class="form-control" rows="1" id="{{ field }}" name="{{ field }}">{{ value | prettyvalue}}</textarea>
+                  {% elif type == 25 %} {# text #}
   
                   <input class="form-control p-3" type="text" 
-                    id="{{ field }}" name="{{ field }}" {% if keyword in 'Edit,FromMultipack' %}value = "{{ value }}"{% endif %}
+                    id="{{ field }}" name="{{ field }}" {% if keyword in 'Edit,FromMultipack' %}value = "{{ value | prettyvalue }}"{% endif %}
                     {% if field == 'brand' or field == 'store' or field == 'type' %} 
                       list = "{{ field }}Options"> 
                       <datalist id="{{field}}Options">
