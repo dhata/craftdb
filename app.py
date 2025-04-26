@@ -3,7 +3,8 @@ import psycopg2
 from psycopg2 import extras
 from datetime import datetime, timezone
 from dotenv import load_dotenv
-from flask import Flask, request, url_for, render_template, jsonify
+from functools import wraps
+from flask import Flask, request, url_for, render_template, jsonify, Response
 
 SUBQ_TOTAL_COST_BY_PROJECT_ID= '''select t.project_id, sum(t.total_cost) as total_cost from (select usages.usage_id, usages.project_id, usages.units, supplies.cost/supplies.volume as costper, supplies.cost/supplies.volume*usages.units as total_cost from usages left join supplies on supplies.supply_id = usages.supply_id) t group by project_id'''
 CREATE_ROOMS_TABLE = (
@@ -102,13 +103,40 @@ load_dotenv()
 
 app = Flask(__name__)
 url = os.getenv("DATABASE_URL")
+port = os.getenv("PORT")
+admin_password = os.getenv("ADMIN_PASSWORD")
 connection = psycopg2.connect(url)
 
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=port)
+
+def check_auth(password):
+    """Checks if username/password combination is valid."""
+    return password == admin_password
+
+def authenticate():
+    """Sends a 401 response that enables basic auth"""
+    return Response(
+    'Could not verify your access level for that URL.\n'
+    'You have to login with proper credentials', 401,
+    {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.password):
+            return authenticate()
+        return f(*args, **kwargs)
+    return decorated
+
 @app.route("/")
+@requires_auth
 def home():
     return render_template("index.html")
 
 @app.route("/view/<object>", methods=['GET'])
+@requires_auth
 def view(object):
     query = ""
     title = ""
@@ -129,6 +157,7 @@ def view(object):
     return render_template("view.html", object=object, fields=fields, data=data, title = title)
 
 @app.route("/create/<object>",methods=['GET','POST'])
+@requires_auth
 def create(object):
     data = []
     query = ""
@@ -168,6 +197,7 @@ def create(object):
 
 
 @app.route("/edit/<object>/<objectid>")
+@requires_auth
 def edit(object, objectid):
     # print(object)
     data = []
@@ -226,6 +256,7 @@ def edit(object, objectid):
 # @app.route('/item/<int:appitemid>/')
 # @app.route('/item/<int:appitemid>/<path:anythingcanbehere>')
 @app.route("/view/usage/<project_id>", methods=["POST"])
+@requires_auth
 def view_usage(project_id):
     query = GET_SUPPLIES_WITH_USAGE_FROM_PROJECT
     with connection:
