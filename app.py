@@ -107,9 +107,6 @@ port = os.getenv("PORT")
 admin_password = os.getenv("ADMIN_PASSWORD")
 connection = psycopg2.connect(url)
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=port)
-
 def check_auth(password):
     """Checks if username/password combination is valid."""
     return password == admin_password
