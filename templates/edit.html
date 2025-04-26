@@ -3,9 +3,7 @@
 {% block title %}Projects - {% endblock %}
 
 {% block content %}
-{{ dropdown }}
-{{ new }}
-{{ data }}
+
   <h1>Project Page</h1>
     <div class="container">
         {% if new %}
@@ -32,7 +30,7 @@
                       list = "{{ field }}Options"> 
                       <datalist id="{{field}}Options">
                         {% for option in dropdown[field] %}
-                        <option value={{ option }}>
+                        <option value="{{ option }}"">
                         {% endfor %}
                     </datalist 
                     {% endif %}

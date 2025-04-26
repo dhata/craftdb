@@ -137,7 +137,7 @@ def create(object):
     dropdown.update(get_brands()[0])
     dropdown.update(get_stores()[0])
     if object=="project":
-        print("project object")
+        # print("project object")
         query = CHECK_PROJECT
     elif object == "multipack":
         query = CHECK_MULTIPACK
@@ -146,7 +146,7 @@ def create(object):
     with connection:
          with connection.cursor() as cursor:
             cursor.execute(query)
-    print(cursor.description)
+    # print(cursor.description)
     keyword = "New"
     data = list([(desc.name, None , desc.type_code) for desc in cursor.description])
     if request.method == 'POST':
@@ -163,20 +163,20 @@ def create(object):
             data.pop(6)
             data.insert(6,('cost', request.form['costper'],701))
             keyword = "FromMultipack"
-    print(data)
+    # print(data)
     return render_template("edit.html", object=object, data = data, dropdown=dropdown, keyword = keyword)
 
 
 @app.route("/edit/<object>/<objectid>")
 def edit(object, objectid):
-    print(object)
+    # print(object)
     data = []
     query = ""
     dropdown = {}
     dropdown.update(get_project_types()[0])
     dropdown.update(get_brands()[0])
     dropdown.update(get_stores()[0])
-    print(objectid)
+    # print(objectid)
     if object=="project":
         print("project object")
         query = GET_PROJECT
@@ -186,15 +186,15 @@ def edit(object, objectid):
                 data = list(([((cursor.description[i][0], value, cursor.description[i][1]) \
                     for i, value in enumerate(row)) for row in cursor.fetchall()])[0])
         
-        print(data)
-        print(dropdown)
+        # print(data)
+        # print(dropdown)
         query = GET_USAGES_FROM_PROJECT
         with connection:
             with connection.cursor() as cursor:
                 cursor.execute(query.format(objectid))
                 childdata = cursor.fetchall()
                 childfields = [i[0] for i in cursor.description]
-                print([i for i in cursor.description])
+                # print([i for i in cursor.description])
         return render_template("project.html", object= object, data=data, dropdown=dropdown, keyword="Edit", childdata=childdata, childfields=childfields)
     elif object == "multipack":
         query = GET_MULTIPACK
@@ -219,8 +219,8 @@ def edit(object, objectid):
             cursor.execute(query.format(objectid))
             data = list(([((cursor.description[i][0], value, cursor.description[i][1]) \
                 for i, value in enumerate(row)) for row in cursor.fetchall()])[0])
-    print(data)
-    print(dropdown)
+    # print(data)
+    # print(dropdown)
     return render_template("edit.html", object= object, data=data, dropdown=dropdown, keyword = "Edit")
 
 # @app.route('/item/<int:appitemid>/')
@@ -235,7 +235,7 @@ def view_usage(project_id):
             fields = [i[0] for i in cursor.description]
             # data = list(([((cursor.description[i][0], value, cursor.description[i][1]) \
             #     for i, value in enumerate(row)) for row in cursor.fetchall()])[0])
-    print(data)
+    # print(data)
     return render_template("checklist.html", object = 'supply', fields = fields, data = data, project_id = project_id, link = False)
 
 @app.post("/api/room")
@@ -277,8 +277,8 @@ def create_supply():
     estimate = data["estimate"]
     used = data.get("used",False)
     multipack_id = data.get("multipack_id")
-    print("create supply")
-    print(data)
+    # print("create supply")
+    # print(data)
     try:
         purchase_date = datetime.strptime(data["purchase_date"],"%m/%d/%Y")
     except KeyError:
@@ -315,7 +315,7 @@ def create_multipack():
 @app.post("/api/usage")
 def create_delete_usage():
     data = request.get_json()
-    print(data)
+    # print(data)
     project_id = data["project_id"]
     supply_ids = data["supply_ids"] # list of ids
     volume = 0
@@ -324,13 +324,13 @@ def create_delete_usage():
             cursor.execute(CREATE_USAGES_TABLE)
     new_values = [(supply_id, i, n) for supply_id, i, n in zip(data["supply_ids"], data["initial_usages"],data['new_usages']) if i != n]
     # this is a list of tuples (supply_id, i, n) need to compare values
-    print(new_values)
+    # print(new_values)
     add = []
     remove = []
     [add.append((project_id, v[0],0 )) if v[2]>v[1] else remove.append((project_id, v[0])) for v in new_values]
     # want to return a list of tuples: [(1,2,0),(1,3,0)]
-    print(add)
-    print(remove)
+    # print(add)
+    # print(remove)
     with connection:
         with connection.cursor() as cursor:
             psycopg2.extras.execute_values(cursor,INSERT_USAGES_RETURN_ID, add)
@@ -343,7 +343,7 @@ def update_project():
     data = request.get_json()
     with connection:
         with connection.cursor() as cursor:
-            print(data)
+            # print(data)
             cursor.execute(UPDATE_PROJECTS_RETURN_ID.format(**data))
             id = cursor.fetchone()[0]
     return {"id": id, "message": f"Project {data['name']} updated.", "redirect":"/edit/project/"+str(id)}, 201
@@ -351,7 +351,7 @@ def update_project():
 @app.post("/api/multipack/update")
 def update_multipack():
     data = request.get_json()
-    print(data)
+    # print(data)
     with connection:
         with connection.cursor() as cursor:
             cursor.execute(UPDATE_MULTIPACKS_RETURN_ID.format(**data))
@@ -369,12 +369,12 @@ def update_supply():
 
 @app.post("/api/usage/update")
 def update_usage():
-    print('update usage')
+    # print('update usage')
     data = request.get_json()
-    print(data)
+    # print(data)
     values =", ".join(["("+ obj['usage_id']+", "+obj['units']+", '"+obj['notes']+"')" for obj in data.values()])
     
-    print(values)
+    # print(values)
     with connection:
         with connection.cursor() as cursor:
             cursor.execute(UPDATE_USAGES_RETURN_ID.format(values))
