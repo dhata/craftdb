@@ -26,7 +26,7 @@ CREATE_USAGES_TABLE = (
 )
 
 INSERT_ROOM_RETURN_ID = "INSERT INTO rooms (name) VALUES (%s) RETURNING id;"
-INSERT_PROJECTS_RETURN_ID = "INSERT INTO projects (name, date, type) VALUES (%s, %s, %s) RETURNING project_id;"
+INSERT_PROJECTS_RETURN_ID = "INSERT INTO projects (name, date, type, notes) VALUES (%s, %s, %s, %s) RETURNING project_id;"
 INSERT_TEMP = (
     "INSERT INTO temperatures (room_id, temperature, date) VALUES (%s, %s, %s);"
 )
@@ -282,6 +282,7 @@ def create_project():
     data = request.get_json()
     name = data["name"]
     type = data["type"]
+    notes = data["notes"]
     try:
         date = datetime.strptime(data["date"],"%m/%d/%Y")
     except KeyError:
@@ -290,7 +291,7 @@ def create_project():
     with connection:
         with connection.cursor() as cursor:
             cursor.execute(CREATE_PROJECTS_TABLE)
-            cursor.execute(INSERT_PROJECTS_RETURN_ID,(name, date, type))
+            cursor.execute(INSERT_PROJECTS_RETURN_ID,(name, date, type, notes))
             project_id = cursor.fetchone()[0]
     return {"id": project_id, "message": f"Project {name} created.", "redirect":"/edit/project/"+str(project_id)}, 201
 
@@ -317,7 +318,7 @@ def create_supply():
             cursor.execute(CREATE_SUPPLIES_TABLE)
             cursor.execute(INSERT_SUPPLIES_RETURN_ID,(name, purchase_date, brand, store, volume, cost, estimate, used, multipack_id))
             supply_id = cursor.fetchone()[0]
-    return {"id": supply_id, "message": f"Supply {name} created.", "redirect":"/edit/supply/"+str(supply_id)}, 201
+    return {"id": supply_id, "message": f"Supply {name} created.", "redirect":"/edit/supply/"+str(supply_id), "multipack_id": multipack_id}, 201
 
 @app.post("/api/multipack")
 def create_multipack():

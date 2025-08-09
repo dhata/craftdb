@@ -110,17 +110,23 @@
                 },
                 success: function (response_data) {
                     // showAlert($("#name").val())
-                    showAlert(response_data.message, response_data.redirect)
+                    showAlert(response_data.message, response_data.redirect, response_data.multipack_id)
                     console.log(response_data)
                 }
             })
             console.log('disable button')
             $("#form :input").prop("disabled", true);
         });
-        function showAlert(message, redirect) {
+        function showAlert(message, redirect, multipack_id) {
             console.log('called show alert')
             console.log(redirect)
-            $('#alert').html("<div class='alert alert-success'>" + message + " <a href = '" + redirect + "')'>Click to Go to {{ object | prettyvalue}}</a></div>");
+            alert_text = "<div class='alert alert-success'>" + message + " <a href = '" + redirect + "')'>Click to Go to {{ object | prettyvalue}}.</a>"
+            if (multipack_id){
+                alert_text += " <a href = '/edit/multipack/" + multipack_id + "')'>Click to Go to back to Multipack.</a>"
+            }
+            alert_text +="</div>"
+            console.log(alert_text)
+            $('#alert').html(alert_text);
             $('#alert').show();
         };
     });
